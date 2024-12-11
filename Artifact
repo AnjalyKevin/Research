@@ -9,3 +9,9 @@ sns.set(style="whitegrid")
 
 df = pd.read_csv('/kddcup99_csv.csv')
 df
+
+df.columns
+
+df.shape
+
+df.info()
