@@ -15,3 +15,12 @@ df.columns
 df.shape
 
 df.info()
+
+input_cols = list(df.columns)[1:-1]
+target_col = 'label'
+numeric_cols = df.select_dtypes(include=np.number).columns.tolist()[:-1]
+
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+scaler.fit(df[numeric_cols])
+df[numeric_cols] = scaler.transform(df[numeric_cols])
