@@ -24,3 +24,22 @@ from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
 scaler.fit(df[numeric_cols])
 df[numeric_cols] = scaler.transform(df[numeric_cols])
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+
+target = df['label']
+df['label'] = le.fit_transform(target)
+df['protocol_type'] = le.fit_transform(df['protocol_type'])
+df['service'] = le.fit_transform(df['service'])
+df['flag'] = le.fit_transform(df['flag'])
+
+
+plt.figure(figsize=(8, 6))
+protocol_counts = df['protocol_type'].value_counts()
+sns.barplot(x=protocol_counts.index, y=protocol_counts.values, palette="Blues_d")
+plt.title("Distribution of Protocol Types", fontsize=16)
+plt.xlabel("Protocol Type", fontsize=12)
+plt.ylabel("Count", fontsize=12)
+plt.xticks(rotation=45)
+plt.show()
