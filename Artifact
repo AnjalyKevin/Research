@@ -43,3 +43,32 @@ plt.xlabel("Protocol Type", fontsize=12)
 plt.ylabel("Count", fontsize=12)
 plt.xticks(rotation=45)
 plt.show()
+
+
+plt.figure(figsize=(15, 12))
+correlation_matrix = df.corr()
+sns.heatmap(correlation_matrix, cmap='coolwarm', annot=False, cbar=True)
+plt.title("Correlation Heatmap of Features", fontsize=16)
+plt.show()
+
+
+plt.figure(figsize=(10, 8))
+sns.scatterplot(data=df, x='src_bytes', y='dst_bytes', hue='label', alpha=0.5, palette="Set1")
+plt.title("Source Bytes vs Destination Bytes", fontsize=16)
+plt.xlabel("Source Bytes", fontsize=12)
+plt.ylabel("Destination Bytes", fontsize=12)
+plt.legend(loc='upper right', title="Label")
+plt.show()
+
+
+time_traffic = df.groupby('duration')['src_bytes'].sum().reset_index()
+plt.figure(figsize=(10, 6))
+plt.plot(time_traffic['duration'], time_traffic['src_bytes'], label='Src Bytes', color='blue')
+plt.title("Network Traffic Over Time", fontsize=16)
+plt.xlabel("Duration", fontsize=12)
+plt.ylabel("Aggregated Source Bytes", fontsize=12)
+plt.legend()
+plt.show()
+
+
+
