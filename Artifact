@@ -10,11 +10,30 @@ sns.set(style="whitegrid")
 df = pd.read_csv('/kddcup99_csv.csv')
 df
 
+
+print("Unique labels in the target column:")
+print(df['label'].unique())
+
+# Count of each label
+print("Label distribution:")
+print(df['label'].value_counts())
+
+
 df.columns
 
 df.shape
 
 df.info()
+
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+
+
+df['protocol_type'] = le.fit_transform(df['protocol_type'])
+df['service'] = le.fit_transform(df['service'])
+df['flag'] = le.fit_transform(df['flag'])
+
 
 input_cols = list(df.columns)[1:-1]
 target_col = 'label'
@@ -25,14 +44,37 @@ scaler = MinMaxScaler()
 scaler.fit(df[numeric_cols])
 df[numeric_cols] = scaler.transform(df[numeric_cols])
 
-from sklearn.preprocessing import LabelEncoder
-le = LabelEncoder()
 
-target = df['label']
-df['label'] = le.fit_transform(target)
-df['protocol_type'] = le.fit_transform(df['protocol_type'])
-df['service'] = le.fit_transform(df['service'])
-df['flag'] = le.fit_transform(df['flag'])
+label_mapping = {
+    'normal': 0,  # No attack (Normal traffic)
+    # Assign 1 for Man-in-the-Middle attacks (MTM)
+    'smurf': 1, 'neptune': 1, 'back': 1, 'teardrop': 1, 'pod': 1, 'land': 1,
+    'warezclient': 1, 'warezmaster': 1, 'rootkit': 1, 'loadmodule': 1, 'perl': 1,
+    'portsweep': 1, 'ipsweep': 1, 'satan': 1, 'nmap': 1,
+    # Assign 2 for Phishing-related attacks
+    'guess_passwd': 2, 'ftp_write': 2, 'imap': 2, 'phf': 2, 'multihop': 2, 'spy': 2
+}
+
+# Apply the new mapping to the 'label' column
+df['label'] = df['label'].map(label_mapping)
+
+
+print("Unique labels in the target column:")
+print(df['label'].unique())
+
+# Count of each label
+print("Label distribution:")
+print(df['label'].value_counts())
+
+
+df = df.dropna(subset=['label'])
+
+
+print("Unique labels in the target column:")
+print(df['label'].unique())
+
+print("Label distribution:")
+print(df['label'].value_counts())
 
 
 plt.figure(figsize=(8, 6))
@@ -69,6 +111,64 @@ plt.xlabel("Duration", fontsize=12)
 plt.ylabel("Aggregated Source Bytes", fontsize=12)
 plt.legend()
 plt.show()
+
+
+from sklearn.model_selection import train_test_split
+train_df, test_df = train_test_split(df, test_size=0.3, random_state=42)
+print(train_df.shape)
+print(test_df.shape)
+
+
+train_inputs = train_df[input_cols].copy()
+train_targets = train_df[target_col].copy()
+test_inputs = test_df[input_cols].copy()
+test_targets = test_df[target_col].copy()
+
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectFromModel
+sel = SelectFromModel(RandomForestClassifier(n_estimators = 5, random_state=42))
+sel.fit(train_inputs, train_targets)
+selected_feat = train_inputs.columns[(sel.get_support())]
+print(selected_feat)
+print(len(selected_feat))
+
+
+from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+dc = DecisionTreeClassifier()
+dc.fit(train_inputs[selected_feat], train_targets);
+preds_dc = dc.predict(test_inputs[selected_feat])
+score_dc = accuracy_score(test_targets, preds_dc)
+score_dc
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+# Preprocessing: Convert categorical columns to numeric
+categorical_cols = df.select_dtypes(include=['object']).columns
+
+# Encode categorical columns
+label_encoders = {}
+for col in categorical_cols:
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    label_encoders[col] = le
+
+# Split the dataset into features (X) and labels (y)
+X = df.drop(columns=['label'])
+y = df['label']
+
+# Standardize the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Display shapes of the processed datasets
+X_train.shape, X_test.shape, y_train.shape, y_test.shape
 
 
 
