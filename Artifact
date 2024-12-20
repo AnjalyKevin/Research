@@ -171,4 +171,34 @@ X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, 
 X_train.shape, X_test.shape, y_train.shape, y_test.shape
 
 
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
 
+# Initialize the Decision Tree Classifier
+dt_model = DecisionTreeClassifier(random_state=42)
+
+# Train the model
+dt_model.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred_dt = dt_model.predict(X_test)
+
+# Evaluate the model
+accuracy_dt = accuracy_score(y_test, y_pred_dt)
+print(f"Decision Tree Accuracy: {accuracy_dt:.2f}")
+
+
+from sklearn.ensemble import AdaBoostClassifier
+
+# Initialize the AdaBoost Classifier
+adaboost_model = AdaBoostClassifier(n_estimators=50, random_state=42)
+
+# Train the model
+adaboost_model.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred_ab = adaboost_model.predict(X_test)
+
+# Evaluate the model
+accuracy_ab = accuracy_score(y_test, y_pred_ab)
+print(f"AdaBoost Accuracy: {accuracy_ab:.2f}")
