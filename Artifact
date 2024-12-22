@@ -202,3 +202,67 @@ y_pred_ab = adaboost_model.predict(X_test)
 # Evaluate the model
 accuracy_ab = accuracy_score(y_test, y_pred_ab)
 print(f"AdaBoost Accuracy: {accuracy_ab:.2f}")
+
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+
+# Calculate the appropriate reshape dimensions
+num_samples = X_train.shape[0]
+num_features = X_train.shape[1]
+
+# Calculate closest factors for reshaping
+factors = []
+for i in range(1, int(num_features**0.5) + 1):
+    if num_features % i == 0:
+        factors.extend([i, num_features // i])
+factors = sorted(list(set(factors)))
+
+# Find the pair of factors closest to a square shape
+best_factors = factors[len(factors) // 2 - 1], factors[len(factors) // 2]
+
+# Reshape data into image-like format using best factors
+# Pad with zeros if necessary
+side_length1, side_length2 = best_factors
+padding_needed = side_length1 * side_length2 - num_features
+if padding_needed > 0:
+    X_train_padded = np.pad(X_train, ((0, 0), (0, padding_needed)), 'constant')
+    X_test_padded = np.pad(X_test, ((0, 0), (0, padding_needed)), 'constant')
+else:
+    X_train_padded = X_train
+    X_test_padded = X_test
+
+X_train_cnn = X_train_padded.reshape(num_samples, side_length1, side_length2, 1)
+X_test_cnn = X_test_padded.reshape(X_test_padded.shape[0], side_length1, side_length2, 1)
+
+# Convert labels to one-hot encoding
+encoder = OneHotEncoder(sparse_output=False) # Changed 'sparse' to 'sparse_output'
+y_train_cnn = encoder.fit_transform(y_train.values.reshape(-1, 1))
+y_test_cnn = encoder.transform(y_test.values.reshape(-1, 1))
+
+# Define CNN model
+cnn_model = models.Sequential([
+    layers.Conv2D(32, (2, 2), activation='relu', padding='same', input_shape=(side_length1, side_length2, 1)),
+    layers.MaxPooling2D((1, 2), padding='same'),  # Adjusted pool size and added padding
+    layers.Conv2D(64, (2, 2), activation='relu', padding='same'),
+    layers.MaxPooling2D((1, 2), padding='same'),  # Adjusted pool size and added padding
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(y_train_cnn.shape[1], activation='softmax')
+])
+
+
+# Compile the model
+cnn_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+cnn_model.fit(X_train_cnn, y_train_cnn, epochs=10, batch_size=64, validation_split=0.2)
+
+# Evaluate the model
+test_loss, test_acc = cnn_model.evaluate(X_test_cnn, y_test_cnn)
+print(f"CNN Test Accuracy: {test_acc:.2f}")
+
+
+
