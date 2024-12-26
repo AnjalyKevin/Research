@@ -293,3 +293,73 @@ test_loss, test_acc = lstm_model.evaluate(X_test_lstm, y_test_cnn)
 print(f"LSTM Test Accuracy: {test_acc:.2f}")
 
 
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+accuracy_dt = accuracy_score(y_test, y_pred_dt)
+print(f"Decision Tree Accuracy: {accuracy_dt:.2f}")
+
+# Classification Report
+class_report_dt = classification_report(y_test, y_pred_dt)
+print("Classification Report:")
+print(class_report_dt)
+
+
+class_report_ab = classification_report(y_test, y_pred_ab)
+print("AdaBoost Classification Report:")
+print(class_report_ab)
+
+
+# Make predictions on the test set
+y_pred_cnn = cnn_model.predict(X_test_cnn)
+
+# Convert predictions from one-hot encoding to label
+y_pred_labels = np.argmax(y_pred_cnn, axis=1)
+
+# Convert true labels from one-hot encoding to label
+y_test_labels = np.argmax(y_test_cnn, axis=1)
+
+# Generate and print classification report
+report = classification_report(y_test_labels, y_pred_labels)
+print("Classification Report CNN:")
+print(report)
+
+
+# Make predictions on the test set
+y_pred_lstm = lstm_model.predict(X_test_lstm)
+
+# Convert predictions from one-hot encoding to label by selecting the class with the highest probability
+y_pred_labels = np.argmax(y_pred_lstm, axis=1)
+
+# Convert true labels from one-hot encoding to label
+y_test_labels = np.argmax(y_test_cnn, axis=1)
+
+# Generate and print the classification report
+report = classification_report(y_test_labels, y_pred_labels)
+print("Classification Report LSTM:")
+print(report)
+
+
+from tabulate import tabulate
+
+# Data for each model and class (Precision, Recall and F1-Score)
+data = {
+    "Model": ["Decision Tree", "Decision Tree", "Decision Tree", "Decision Tree",
+              "AdaBoost", "AdaBoost", "AdaBoost", "AdaBoost",
+              "CNN", "CNN", "CNN", "CNN",
+              "LSTM", "LSTM", "LSTM", "LSTM"],
+    "Class": ["Normal Traffic", "MITM Attacks", "Phishing Attacks", "Overall",
+              "Normal Traffic", "MITM Attacks", "Phishing Attacks", "Overall",
+              "Normal Traffic", "MITM Attacks", "Phishing Attacks", "Overall",
+              "Normal Traffic", "MITM Attacks", "Phishing Attacks", "Overall"],
+    "Precision": [1.00, 1.00, 0.65, 1.00, 0.96, 0.99, 0.67, 0.99, 1.00, 1.00, 0.85, 1.00, 1.00, 1.00, 0.83, 1.00],
+    "Recall": [1.00, 1.00, 0.73, 1.00, 0.98, 0.99, 0.67, 0.99, 1.00, 1.00, 0.73, 1.00, 1.00, 1.00, 0.67, 1.00],
+    "F1-Score": [1.00, 1.00, 0.69, 1.00, 0.97, 0.99, 0.67, 0.99, 1.00, 1.00, 0.79, 1.00, 1.00, 1.00, 0.74, 1.00]
+}
+
+# Create DataFrame
+df_comparison = pd.DataFrame(data)
+
+# Format the table with tabulate for better visualization
+table = tabulate(df_comparison, headers='keys', tablefmt='grid', showindex=False)
+
+# Display the table with borders
+print(table)
