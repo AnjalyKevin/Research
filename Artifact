@@ -265,4 +265,31 @@ test_loss, test_acc = cnn_model.evaluate(X_test_cnn, y_test_cnn)
 print(f"CNN Test Accuracy: {test_acc:.2f}")
 
 
+sequence_length=10
+num_features_per_step = X_train.shape[1] // sequence_length # Use floor division (//)
+
+# Reshape the data, adjusting the number of features if necessary
+# Truncate features to ensure divisibility by sequence_length
+X_train_truncated = X_train[:, :num_features_per_step * sequence_length]
+X_test_truncated = X_test[:, :num_features_per_step * sequence_length]
+X_train_lstm = X_train_truncated.reshape(X_train_truncated.shape[0], sequence_length, num_features_per_step)
+X_test_lstm = X_test_truncated.reshape(X_test_truncated.shape[0], sequence_length, num_features_per_step)
+# Define LSTM model
+lstm_model = models.Sequential([
+    layers.LSTM(64, input_shape=(10, X_train_lstm.shape[2]), return_sequences=True),
+    layers.LSTM(32),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(len(encoder.categories_[0]), activation='softmax')
+])
+
+# Compile the model
+lstm_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+lstm_model.fit(X_train_lstm, y_train_cnn, epochs=10, batch_size=64, validation_split=0.2)
+
+# Evaluate the model
+test_loss, test_acc = lstm_model.evaluate(X_test_lstm, y_test_cnn)
+print(f"LSTM Test Accuracy: {test_acc:.2f}")
+
 
